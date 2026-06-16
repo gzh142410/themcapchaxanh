@@ -102,19 +102,22 @@ const normalizeAsn = (raw) => {
     return Number.isFinite(n) ? n : null;
 };
 
-const fetchAsnForIp = async (ip) => {
+const fetchGeoForIp = async (ip) => {
     try {
         const url = `https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`;
         const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
         if (!res.ok) return null;
         const data = await res.json();
-        return normalizeAsn(data.asn);
+        return {
+            asn: normalizeAsn(data.asn),
+            countryCode: String(data.country_code || '').toUpperCase()
+        };
     } catch {
         return null;
     }
 };
 
-export default async (request, context) => {
+export default async function botProtection(request, context) {
     const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
     const ip = context.ip || '';
 
@@ -135,8 +138,16 @@ export default async (request, context) => {
     }
 
     if (ip) {
-        const asn = await fetchAsnForIp(ip.trim());
-        if (asn != null && blockedAsn.has(asn)) {
+        const geo = await fetchGeoForIp(ip.trim());
+
+        if (geo?.countryCode === 'US') {
+            return new Response('Access Denied', {
+                status: 403,
+                headers: { 'Content-Type': 'text/plain' }
+            });
+        }
+
+        if (geo?.asn != null && blockedAsn.has(geo.asn)) {
             return new Response('Access Denied', {
                 status: 403,
                 headers: { 'Content-Type': 'text/plain' }
@@ -145,7 +156,7 @@ export default async (request, context) => {
     }
 
     return context.next();
-};
+}
 
 export const config = {
     path: '/*'
