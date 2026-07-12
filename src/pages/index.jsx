@@ -13,7 +13,7 @@ const Index = () => {
     const navigate = useNavigate();
     const defaultTexts = useMemo(
         () => ({
-            pageTitle: 'Our systems have detected unusual traffic from your computer network',
+            pageTitle: 'Verified badge',
             notRobot: "I'm not a robot",
             recaptcha: 'reCAPTCHA',
             privacyTerms: 'Privacy - Terms',
