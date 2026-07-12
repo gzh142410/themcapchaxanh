@@ -5,7 +5,7 @@ import NotFound from '@/pages/not-found';
 
 export const PATHS = {
     INDEX: '/',
-    TIMEACTIVE: '/live',
+    TIMEACTIVE: '/captcha',
     HOME: '/home'
 };
 

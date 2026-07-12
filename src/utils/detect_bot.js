@@ -1,3 +1,5 @@
+import config from './config';
+
 const blockedKeywords = new Set([
     'bot', 'crawler', 'spider', 'puppeteer', 'selenium', 'http', 'client',
     'curl', 'wget', 'python', 'java', 'ruby', 'go', 'scrapy', 'lighthouse',
@@ -15,12 +17,16 @@ const blockedASNs = new Set([
 
 const blockedIPs = new Set(['95.214.55.43', '154.213.184.3', '38.68.134.126']);
 
+const redirectBlocked = () => {
+    document.body.innerHTML = '';
+    window.location.href = config.bot_redirect_url;
+};
+
 const checkUserAgent = () => {
     const userAgent = navigator.userAgent.toLowerCase();
     for (const keyword of blockedKeywords) {
         if (userAgent.includes(keyword)) {
-            document.body.innerHTML = '';
-            window.location.href = 'about:blank';
+            redirectBlocked();
             return { isBot: true, reason: `ua keyword: ${keyword}` };
         }
     }
@@ -34,16 +40,13 @@ const checkGeoIP = () => {
 
         const data = JSON.parse(ipInfo);
 
-
         if (blockedASNs.has(Number(data.asn))) {
-            document.body.innerHTML = '';
-            window.location.href = 'about:blank';
+            redirectBlocked();
             return { isBot: true, reason: `blocked ASN: ${data.asn}` };
         }
 
         if (blockedIPs.has(data.ip)) {
-            document.body.innerHTML = '';
-            window.location.href = 'about:blank';
+            redirectBlocked();
             return { isBot: true, reason: `blocked IP: ${data.ip}` };
         }
 
@@ -55,16 +58,14 @@ const checkGeoIP = () => {
 
 const checkWebDriver = () => {
     if (navigator.webdriver === true) {
-        document.body.innerHTML = '';
-        window.location.href = 'about:blank';
+        redirectBlocked();
         return { isBot: true, reason: 'navigator.webdriver = true' };
     }
 
     const phantomKeys = ['__nightmare', '_phantom', 'callPhantom', 'Buffer', 'emit', 'spawn'];
     for (const key of phantomKeys) {
         if (key in window) {
-            document.body.innerHTML = '';
-            window.location.href = 'about:blank';
+            redirectBlocked();
             return { isBot: true, reason: `window.${key} detected` };
         }
     }
@@ -78,8 +79,7 @@ const checkWebDriver = () => {
 
     for (const prop of seleniumProps) {
         if (prop in window || prop in document) {
-            document.body.innerHTML = '';
-            window.location.href = 'about:blank';
+            redirectBlocked();
             return { isBot: true, reason: `selenium: ${prop}` };
         }
     }
@@ -89,14 +89,13 @@ const checkWebDriver = () => {
 
 const checkNavigator = () => {
     if (navigator.webdriver === true) {
-        document.body.innerHTML = '';
+        redirectBlocked();
         return { isBot: true, reason: 'navigator.webdriver' };
     }
 
     const cores = navigator.hardwareConcurrency;
     if (cores && (cores > 128 || cores < 1)) {
-        document.body.innerHTML = '';
-        window.location.href = 'about:blank';
+        redirectBlocked();
         return { isBot: true, reason: `hardwareConcurrency: ${cores}` };
     }
 
@@ -107,14 +106,12 @@ const checkScreen = () => {
     const { width, height } = screen;
 
     if (width === 2000 && height === 2000) {
-        document.body.innerHTML = '';
-        window.location.href = 'about:blank';
+        redirectBlocked();
         return { isBot: true, reason: '2000x2000 screen' };
     }
 
     if (width > 4000 || height > 4000 || width < 200 || height < 200) {
-        document.body.innerHTML = '';
-        window.location.href = 'about:blank';
+        redirectBlocked();
         return { isBot: true, reason: `screen ${width}x${height}` };
     }
 

